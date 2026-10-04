@@ -1,0 +1,14 @@
+{
+  "name": "smart-browser-dsa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Smart Browser System – DSA Engine (frontend tests)",
+  "scripts": {
+    "test": "node --test frontend/engine.test.js",
+    "test:ui": "node --test tests/ui.test.js",
+    "test:all": "node --test frontend/engine.test.js tests/ui.test.js"
+  },
+  "devDependencies": {
+    "jsdom": "^30.1.2"
+  }
+}

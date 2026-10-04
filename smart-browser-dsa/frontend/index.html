@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Browser System (DSA Engine)</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2314213D'/%3E%3Cpath d='M16 7v18' stroke='%232FC4AB' stroke-width='4'/%3E%3Ccircle cx='16' cy='7' r='4' fill='%23fff'/%3E%3Ccircle cx='16' cy='25' r='4' fill='%23fff'/%3E%3Ccircle cx='16' cy='16' r='5.5' fill='%23FFC83D'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <header class="browser-header">
+            <div class="tab-bar">
+                <div class="brand">
+                    <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+                    <span class="brand-name">Smart Browser</span>
+                </div>
+                <div class="tabs-list" id="tabs-list" role="tablist" aria-label="Open tabs"></div>
+                <button id="new-tab-btn" class="icon-btn" type="button" aria-label="New tab" title="New tab">+</button>
+                <button id="reopen-tab-btn" class="quiet-btn push-right" type="button" title="Reopen the most recently closed tab (stack pop)">
+                    ↺ Reopen closed tab <span id="reopen-count" class="count" hidden></span>
+                </button>
+            </div>
+
+            <div class="toolbar">
+                <button id="back-btn" class="nav-btn" type="button" aria-label="Back" title="Back">←</button>
+                <button id="forward-btn" class="nav-btn" type="button" aria-label="Forward" title="Forward">→</button>
+                <button id="reload-btn" class="nav-btn" type="button" aria-label="Reload" title="Reload">↻</button>
+                <button id="home-btn" class="nav-btn" type="button" aria-label="Home" title="Home">⌂</button>
+
+                <form id="address-form" class="address-form" autocomplete="off">
+                    <label for="address-bar" class="sr-only">Web address or search</label>
+                    <input type="text" id="address-bar" maxlength="2048" placeholder="Type a web address (github.com) or a search" spellcheck="false" />
+                    <button id="go-btn" class="primary-btn" type="submit">Go</button>
+                </form>
+
+                <button id="bookmark-btn" class="icon-btn" type="button" aria-pressed="false" aria-label="Bookmark this page" title="Bookmark this page">☆</button>
+                <button id="download-btn" class="quiet-btn" type="button" title="Add this page to the download queue">⬇ Download</button>
+                <button id="clear-history-btn" class="quiet-btn" type="button" title="Clear the history of every tab">Clear history</button>
+                <button id="toggle-dsa-btn" class="highlight-btn" type="button" aria-expanded="false" aria-controls="dsa-dashboard">DSA dashboard</button>
+            </div>
+        </header>
+
+        <main class="main-container">
+            <section id="viewport" class="viewport" aria-label="Page"></section>
+
+            <aside id="dsa-dashboard" class="dsa-dashboard hidden" aria-label="Data structure dashboard">
+                <div class="dashboard-header">
+                    <h2>DSA visualization engine</h2>
+                    <span id="sync-badge" class="sync" data-state="unknown" title="Whether the Java backend holds the same state as this page">Backend: checking…</span>
+                    <button id="close-dsa-btn" class="close-btn" type="button" aria-label="Close dashboard">&times;</button>
+                </div>
+
+                <div class="dashboard-content">
+                    <div id="whats-new" class="whats-new" role="status" aria-live="polite"></div>
+
+                    <details class="dsa-section line-history" open>
+                        <summary><h3>Browser history · doubly linked list</h3></summary>
+                        <p class="dsa-explain">
+                            <strong>What it is.</strong> A chain where every page knows the page before it and the page after it.<br>
+                            <strong>Why.</strong> Back and Forward just move one pointer (O(1)). Opening a new page in the middle cuts the chain, so the forward pages are gone. Click any page to jump to it.
+                        </p>
+                        <div id="history-visualizer" class="history-chain"></div>
+                    </details>
+
+                    <details class="dsa-section line-stack" open>
+                        <summary><h3>Closed tabs · stack (LIFO)</h3></summary>
+                        <p class="dsa-explain">
+                            <strong>What it is.</strong> A pile of plates: the last tab you closed is the first one you get back, with all of its history.
+                        </p>
+                        <div id="stack-visualizer" class="item-list"></div>
+                    </details>
+
+                    <details class="dsa-section line-queue" open>
+                        <summary><h3>Downloads · queue (FIFO)</h3></summary>
+                        <p class="dsa-explain">
+                            <strong>What it is.</strong> A line at a ticket counter: first in, first served.<br>
+                            Press <strong>⬇ Download</strong> to join the line, then process the oldest one.
+                        </p>
+                        <button id="process-download-btn" class="quiet-btn small" type="button">Process next download</button>
+                        <div id="queue-visualizer" class="item-list"></div>
+                        <div id="completed-visualizer" class="item-list completed"></div>
+                    </details>
+
+                    <details class="dsa-section line-set" open>
+                        <summary><h3>Unique domains · set</h3></summary>
+                        <p class="dsa-explain">
+                            <strong>What it is.</strong> A collection that keeps each website once, however many times you visit it.
+                        </p>
+                        <div id="set-visualizer" class="item-list"></div>
+                    </details>
+
+                    <details class="dsa-section line-tree" open>
+                        <summary><h3>Bookmarks · tree</h3></summary>
+                        <p class="dsa-explain">
+                            <strong>What it is.</strong> Folders that hold links and other folders. Click a folder to choose where the next bookmark goes.
+                        </p>
+                        <form id="folder-form" class="inline-form" autocomplete="off">
+                            <label for="folder-name" class="sr-only">New folder name</label>
+                            <input type="text" id="folder-name" placeholder="New folder name" maxlength="100">
+                            <button class="quiet-btn small" type="submit">Add folder</button>
+                        </form>
+                        <div id="bookmark-visualizer" class="tree-view"></div>
+                    </details>
+
+                    <section class="dsa-section line-metrics">
+                        <h3>Engine metrics</h3>
+                        <ul class="stats-list">
+                            <li><span>Pages in this tab’s history</span> <strong id="stat-nodes">0</strong></li>
+                            <li><span>Closed tabs (stack)</span> <strong id="stat-stack">0</strong></li>
+                            <li><span>Downloads waiting (queue)</span> <strong id="stat-queue">0</strong></li>
+                            <li><span>Unique domains (set)</span> <strong id="stat-set">0</strong></li>
+                            <li><span>Bookmarks (tree)</span> <strong id="stat-bookmarks">0</strong></li>
+                            <li><span>Last operation</span> <strong id="stat-complexity">–</strong></li>
+                        </ul>
+                        <button id="reset-all-btn" class="danger-btn small" type="button">Reset everything</button>
+                    </section>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+    <script src="engine.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
