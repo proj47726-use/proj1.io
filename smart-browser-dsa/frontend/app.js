@@ -9,7 +9,7 @@
     'use strict';
 
     const E = window.BrowserEngine;
-    const API_BASE = window.SMART_BROWSER_API || 'http://localhost:8080/api';
+    const API_BASE = window.SMART_BROWSER_API || '/api';
     const STORAGE_KEY = 'smart-browser-dsa:v2';
     const ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
     const GHOST_LIFETIME_MS = 2300;
